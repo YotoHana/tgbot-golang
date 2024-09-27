@@ -3,6 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -21,18 +23,22 @@ func ConnectToDb() (*sql.DB, error) {
 		return nil, err
 	}
 
-	fmt.Println("Connected to SQLite database!")
+	fmt.Println("Connected to SQLite")
 	return db, nil
 }
 
-func CreateTable(db *sql.DB) {
+func CreateTable(db *sql.DB) error {
 	query := `CREATE TABLE IF NOT EXISTS todo (
 		chatID BIGINT,
 		title TEXT,
 		description TEXT
 	);`
 	_, err := db.Exec(query)
-	fmt.Println(err)
+	if err != nil {
+		return err
+	}
+	log.Println("Create table")
+	return nil
 }
 
 func InsertData (db *sql.DB, chatID int64, title string) error {
@@ -41,6 +47,7 @@ func InsertData (db *sql.DB, chatID int64, title string) error {
 	if err != nil {
 		return err
 	}
+	log.Println("Insert data")
 	return nil
 }
 
@@ -61,6 +68,7 @@ func QueryData (db *sql.DB, chatID int64) ([]Title, error) {
 		}
 		titles = append(titles, title)
 	}
+	log.Println("Query data")
 
 	return titles, nil
 }
@@ -71,5 +79,6 @@ func DeleteData (db *sql.DB, chatID int64, title string) error {
 	if err != nil {
 		return err
 	}
+	log.Println("Delete data")
 	return nil
 }

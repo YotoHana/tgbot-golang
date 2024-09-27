@@ -1,9 +1,7 @@
 package bot
 
 import (
-	"fmt"
 	"strconv"
-
 	"github.com/YotoHana/tgbot-golang/config"
 	db "github.com/YotoHana/tgbot-golang/internal/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -39,7 +37,6 @@ func Run() error{
 
 		if update.CallbackQuery != nil {
 			task := update.CallbackQuery.Data
-			fmt.Println("Callback Data is scrap")
 			sql, err := db.ConnectToDb()
 			if err != nil {
 				return err
@@ -50,7 +47,6 @@ func Run() error{
 			}
 			message := "Задача " + task + " удалена!"
 			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, message)
-			fmt.Println("Callback message is sending")
 			bot.Send(msg)
 		} else if update.Message != nil {
 			if update.Message.IsCommand() {

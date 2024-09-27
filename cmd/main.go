@@ -11,4 +11,5 @@ func main()  {
 	if err != nil {
 		log.Fatalf("Error with bot: %v", err)
 	}
+	log.Println("Bot is started...")
 }

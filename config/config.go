@@ -1,7 +1,9 @@
 package config
 
 import (
+	"log"
 	"os"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -28,5 +30,6 @@ func ReadCfg() (*Cfg, error){
 	if err != nil {
 		return nil, err
 	}
+	log.Println("Config parsing is success")
 	return &AppConfig, nil
 }
