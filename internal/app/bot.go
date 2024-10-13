@@ -110,6 +110,10 @@ func Run() error{
 					msg := tgbotapi.NewMessage(chatID, message)
 					bot.Send(msg)
 
+				case "time":
+					msg := tgbotapi.NewMessage(chatID, "Через какое время вас оповестить? (В форме чч:мм)")
+					userStates[chatID] = "awaiting_time"
+					bot.Send(msg) 
 				case "remove":
 					sql, err := db.ConnectToDb()
 					if err != nil {
@@ -162,7 +166,13 @@ func Run() error{
 					message := "Вам пришел репорт! \n - "
 					msg := tgbotapi.NewMessage(cfg.AdminChatID, message + report)
 					bot.Send(msg)
+					delete(userStates, update.Message.Chat.ID)
 					msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Репорт успешно отправлен!")
+					bot.Send(msg)
+				} else if userStates[update.Message.Chat.ID] == "awaiting_time" {
+					timeText := update.Message.Text
+					delete(userStates, update.Message.Chat.ID)
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, timeText)
 					bot.Send(msg)
 				}
 			}
