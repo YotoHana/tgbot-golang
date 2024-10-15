@@ -1,7 +1,10 @@
 package bot
 
 import (
+	"regexp"
 	"strconv"
+	"time"
+
 	"github.com/YotoHana/tgbot-golang/config"
 	db "github.com/YotoHana/tgbot-golang/internal/database"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -67,6 +70,11 @@ func Run() error{
 					bot.Send(msg)
 				case "add":
 					if args == "" {
+						sql, err := db.ConnectToDb()
+						if err != nil {
+							return err
+						}
+						db.CreateTable(sql)
 						message := "Введите задачу"
 						userStates[chatID] = "awaiting_task"
 						msg := tgbotapi.NewMessage(chatID, message)
@@ -171,9 +179,38 @@ func Run() error{
 					bot.Send(msg)
 				} else if userStates[update.Message.Chat.ID] == "awaiting_time" {
 					timeText := update.Message.Text
-					delete(userStates, update.Message.Chat.ID)
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, timeText)
+					re := regexp.MustCompile("[0-9]+")
+					times := re.FindAllString(timeText, -1)
+					hours, _ := strconv.Atoi(times[0])
+					minutes, _ := strconv.Atoi(times[1])
+					fmtMsg := "Ваши задачи отправятся через " + times[0] + " часов " + "и " + times[1] + " минут"
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmtMsg)
 					bot.Send(msg)
+					delete(userStates, update.Message.Chat.ID)
+					go func (chatID int64, delayH, delayM int) (err error)  {
+						time.Sleep(time.Duration(hours) * time.Hour + time.Duration(minutes) * time.Minute)
+						sql, err := db.ConnectToDb()
+						if err != nil {
+							return err
+						}
+						var title []db.Title
+						title, err = db.QueryData(sql, chatID)
+						if err != nil {
+							return err
+						}
+						if title == nil {
+							msg := tgbotapi.NewMessage(chatID, "У вас нет задач!")
+							bot.Send(msg)
+						}
+						var message string
+						for i, v := range title {
+							message += strconv.Itoa(i+1) + ". " + v.Title + "\n"
+						}
+						
+						msg := tgbotapi.NewMessage(chatID, "Ваши задачи: " + "\n" + message)
+						bot.Send(msg)
+						return nil
+					}(update.Message.Chat.ID, hours, minutes)
 				}
 			}
 		}
